@@ -1,0 +1,32 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: "${AWS_REGION}"
+    # CDK のスタック名や環境変数があればここに定義
+    CDK_STACK_NAME: "tastin-stack"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 16
+    commands:
+      - echo "Install AWS CDK"
+      - npm install -g aws-cdk
+      - echo "Install infra dependencies"
+      - npm ci
+
+  build:
+    commands:
+      - echo "Synthesizing CloudFormation templates with CDK"
+      - npx cdk synth $CDK_STACK_NAME
+
+  post_build:
+    commands:
+      - echo "Deploying CDK stack"
+      - npx cdk deploy $CDK_STACK_NAME --require-approval never
+
+artifacts:
+  # synth で出力された CloudFormation テンプレートを次のステージへ渡す場合
+  files:
+    - cdk.out/**/*.template.json
